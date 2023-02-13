@@ -1,17 +1,12 @@
-import {
-  Injectable,
-  NotFoundException,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
-import { Repository, UpdateResult } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Users } from './entities/users.entity';
-import { IUsers } from './interfaces/users.interface';
-import { UserDto } from './dto/user.dto';
-import { UserProfileDto } from './dto/user-profile.dto';
-import { UserUpdateDto } from './dto/user-update.dto';
-import { HashingService } from '../shared/hashing/hashing.service';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common'
+import { Repository, UpdateResult } from 'typeorm'
+import { InjectRepository } from '@nestjs/typeorm'
+import { Users } from './entities/users.entity'
+import { IUsers } from './interfaces/users.interface'
+import { UserDto } from './dto/user.dto'
+import { UserProfileDto } from './dto/user-profile.dto'
+import { UserUpdateDto } from './dto/user-update.dto'
+import { HashingService } from '../shared/hashing/hashing.service'
 
 @Injectable()
 export class UsersService {
@@ -22,7 +17,7 @@ export class UsersService {
   ) {}
 
   public async findAll(): Promise<Users[]> {
-    return await this.userRepository.find();
+    return await this.userRepository.find()
   }
 
   public async findByEmail(email: string): Promise<Users> {
@@ -30,102 +25,92 @@ export class UsersService {
       where: {
         email: email,
       },
-    });
+    })
 
     if (!user) {
-      throw new NotFoundException(`User ${email} not found`);
+      throw new NotFoundException(`User ${email} not found`)
     }
 
-    return user;
+    return user
   }
 
   public async findById(userId: string): Promise<Users> {
     const user = await this.userRepository.findOneBy({
       id: +userId,
-    });
+    })
 
     if (!user) {
-      throw new NotFoundException(`User #${userId} not found`);
+      throw new NotFoundException(`User #${userId} not found`)
     }
 
-    return user;
+    return user
   }
 
-  public async create(userDto: UserDto): Promise<IUsers> {
+  public async create(request: UserDto): Promise<IUsers> {
     try {
-      return await this.userRepository.save(userDto);
+      const creatableUser = this.userRepository.create(request)
+      return await this.userRepository.save(creatableUser)
     } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(err, HttpStatus.BAD_REQUEST)
     }
   }
 
   public async updateByEmail(email: string): Promise<Users> {
     try {
-      const user = await this.userRepository.findOneBy({ email: email });
-      user.password = await this.hashingService.hash(
-        Math.random().toString(36).slice(-8),
-      );
+      const user = await this.userRepository.findOneBy({ email: email })
+      user.password = await this.hashingService.hash(Math.random().toString(36).slice(-8))
 
-      return await this.userRepository.save(user);
+      return await this.userRepository.save(user)
     } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(err, HttpStatus.BAD_REQUEST)
     }
   }
 
-  public async updateByPassword(
-    email: string,
-    password: string,
-  ): Promise<Users> {
+  public async updateByPassword(email: string, password: string): Promise<Users> {
     try {
-      const user = await this.userRepository.findOneBy({ email: email });
-      user.password = await this.hashingService.hash(password);
+      const user = await this.userRepository.findOneBy({ email: email })
+      user.password = await this.hashingService.hash(password)
 
-      return await this.userRepository.save(user);
+      return await this.userRepository.save(user)
     } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(err, HttpStatus.BAD_REQUEST)
     }
   }
 
-  public async updateProfileUser(
-    id: string,
-    userProfileDto: UserProfileDto,
-  ): Promise<Users> {
+  public async updateProfileUser(id: string, userProfileDto: UserProfileDto): Promise<Users> {
     try {
-      const user = await this.userRepository.findOneBy({ id: +id });
-      user.name = userProfileDto.name;
-      user.email = userProfileDto.email;
-      user.username = userProfileDto.username;
+      const user = await this.userRepository.findOneBy({ id: +id })
+      user.name = userProfileDto.name
+      user.email = userProfileDto.email
+      user.username = userProfileDto.username
 
-      return await this.userRepository.save(user);
+      return await this.userRepository.save(user)
     } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(err, HttpStatus.BAD_REQUEST)
     }
   }
 
-  public async updateUser(
-    id: string,
-    userUpdateDto: UserUpdateDto,
-  ): Promise<UpdateResult> {
+  public async updateUser(id: string, userUpdateDto: UserUpdateDto): Promise<UpdateResult> {
     try {
       const user = await this.userRepository.update(
         {
           id: +id,
         },
         { ...userUpdateDto },
-      );
+      )
 
       if (!user) {
-        throw new NotFoundException(`User #${id} does not exist`);
+        throw new NotFoundException(`User #${id} does not exist`)
       }
 
-      return user;
+      return user
     } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(err, HttpStatus.BAD_REQUEST)
     }
   }
 
   public async deleteUser(id: string): Promise<void> {
-    const user = await this.findById(id);
-    await this.userRepository.remove(user);
+    const user = await this.findById(id)
+    await this.userRepository.remove(user)
   }
 }
